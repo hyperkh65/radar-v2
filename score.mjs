@@ -80,6 +80,10 @@ const clusters = [...groups.values()].map((g) => {
     lead: firstBase && Number.isFinite(firstReal) && Math.abs(firstBase - firstReal) < 24 * 3600e3 ? mins(firstBase - firstReal) : null, members: g, srcs: [...new Set(g.map((x) => x.src))], n: g.length, firstSeenObs };
 }).filter((c) => c.outlets + c.demandSrc >= 2).sort((a, b) => b.score - a.score);
 
+if (process.argv.includes('--json')) { // 자동 기록용: 한 줄 JSON(상위 15개)
+  console.log(JSON.stringify({ t: new Date(NOW).toISOString(), top: clusters.slice(0, 15).map(({ members, firstSeenObs, ...c }) => c) }));
+  process.exit(0);
+}
 console.log(`기준 ${new Date(NOW).toISOString()} · 스냅샷 ${use.length}개 · 항목 ${all.length}개 · 후보 ${clusters.length}개\n`);
 console.log('순위 점수  매체 수요 순위 신선도 위키 mbcdy  주제');
 clusters.slice(0, 15).forEach((c, i) => {
