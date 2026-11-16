@@ -11,7 +11,7 @@ const atArg = process.argv.indexOf('--at');
 const NOW = atArg > 0 ? Date.parse(process.argv[atArg + 1]) : Date.parse(snaps.at(-1).t);
 const use = snaps.filter((s) => Date.parse(s.t) <= NOW);
 
-const SUPPLY = ['yna_society', 'yna_entertain', 'yna_all', 'gnews_top', 'gnews_nation', 'gnews_entertain'];
+const SUPPLY = ['yna_society', 'yna_entertain', 'yna_all', 'newsis', 'donga', 'khan', 'hani', 'nocut', 'sbs', 'mk', 'hankyung', 'gnews_top', 'gnews_nation', 'gnews_entertain'];
 const DEMAND = ['gtrends', 'daum_trend', 'nate_issue', 'naver_popular'];
 const STOP = new Set(['기자', '속보', '단독', '종합', '사진', '영상', '오늘', '관련', '이후', '대한', '위해', '통해', '대해', '발표', '정부', '한국', '서울', '논란', '의혹', '사건', '확인', '예정', '진행', '지난', '최근', '우리', '모든', '이번']);
 const JOSA = /(은|는|이|가|을|를|의|에|에서|와|과|도|로|으로|만|까지|부터|에게|께)$/;
@@ -19,7 +19,7 @@ const JOSA = /(은|는|이|가|을|를|의|에|에서|와|과|도|로|으로|만
 const toks = (s) => [...new Set((s.replace(/ - [^-]+$/, '').match(/[가-힣A-Za-z0-9]{2,}/g) || [])
   .map((w) => (w.length > 2 ? w.replace(JOSA, '') : w)).filter((w) => w.length >= 2 && !STOP.has(w)))];
 const korean = (s) => /[가-힣]/.test(s);
-const t0 = (x) => { const v = Date.parse(x); return Number.isFinite(v) ? v : null; };
+const t0 = (x) => { const v = Date.parse(/^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(:\d\d)?$/.test(x || '') ? x.replace(' ', 'T') + '+09:00' : x); return Number.isFinite(v) ? v : null; }; // 시간대 표시 없는 값은 KST로 간주
 
 // 현재 창(최근 6시간)의 항목
 const WIN = 6 * 3600e3;
@@ -30,9 +30,9 @@ for (const s of use.filter((s) => NOW - Date.parse(s.t) <= WIN)) {
       if (!it.title || (src === 'gtrends' && !korean(it.title)) || src === 'wiki_ko_top') continue;
       const kind = SUPPLY.includes(src) ? 'supply' : DEMAND.includes(src) ? 'demand' : src === 'mbcdy' ? 'base' : null;
       if (!kind) continue;
-      const at = (kind !== 'demand' ? t0(it.at) : null) ?? Date.parse(s.t);
+      const at = (kind !== 'demand' ? t0(src === 'nocut' ? String(it.at).replace(' GMT', ' +0900') : it.at) : null) ?? Date.parse(s.t); // 노컷뉴스는 한국 시각을 GMT로 잘못 표기
       if (NOW - at > 48 * 3600e3) continue;
-      items.push({ src, kind, title: it.title, rank: it.rank || null, at, seen: Date.parse(s.t), tk: toks(it.title), outlet: (it.title.match(/ - ([^-]+)$/) || [])[1] || src });
+      items.push({ src, kind, title: it.title, rank: it.rank || null, at, seen: Date.parse(s.t), tk: toks(it.title), outlet: (it.title.match(/ - ([^-]+)$/) || [])[1] || (src.startsWith('yna') ? '연합뉴스' : src) });
     }
   }
 }
@@ -68,7 +68,7 @@ const clusters = [...groups.values()].map((g) => {
   const demandSrc = new Set(dem.map((x) => x.src)).size;
   const bestRank = Math.min(...dem.map((x) => x.rank || 99), 99);
   const newest = sup.length ? Math.max(...sup.map((x) => x.at)) : null;
-  const age = newest ? mins(NOW - newest) : null;
+  const age = newest ? Math.max(0, mins(NOW - newest)) : null;
   const firstReal = Math.min(...g.filter((x) => x.kind !== 'base').map((x) => x.at), Infinity); // 새 신호원이 처음 본 시각
   const firstBase = base.length ? Math.min(...base.map((x) => x.at)) : null;
   const firstSeenObs = Math.min(...g.filter((x) => x.kind === 'demand').map((x) => x.seen), Infinity);

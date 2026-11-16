@@ -13,13 +13,21 @@ const tag = (b, t) => un(b.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.
 const items = (xml) => xml.match(/<item>[\s\S]*?<\/item>/g) || [];
 
 const rss = (url, n = 40) => async () =>
-  items(await get(url)).slice(0, n).map((b) => ({ title: tag(b, 'title'), link: tag(b, 'link'), at: tag(b, 'pubDate') }));
+  items(await get(url)).slice(0, n).map((b) => ({ title: tag(b, 'title'), link: tag(b, 'link'), at: tag(b, 'pubDate') || tag(b, 'dc:date') }));
 
 const SOURCES = {
   // 공급: 무슨 일이 터졌나
   yna_society: rss('https://www.yna.co.kr/rss/society.xml'),
   yna_entertain: rss('https://www.yna.co.kr/rss/entertainment.xml'),
   yna_all: rss('https://www.yna.co.kr/rss/news.xml', 60),
+  newsis: rss('https://www.newsis.com/RSS/society.xml', 50),
+  donga: rss('https://rss.donga.com/total.xml', 50),
+  khan: rss('https://www.khan.co.kr/rss/rssdata/total_news.xml', 50),
+  hani: rss('https://www.hani.co.kr/rss/', 30),
+  nocut: rss('https://rss.nocutnews.co.kr/nocutnews.xml', 30),
+  sbs: rss('https://news.sbs.co.kr/news/newsflashRssFeed.do?plink=RSSREADER', 50),
+  mk: rss('https://www.mk.co.kr/rss/30000001/', 50),
+  hankyung: rss('https://www.hankyung.com/feed/all-news', 50),
   gnews_top: rss('https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko', 40),
   gnews_nation: rss('https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko', 40),
   gnews_entertain: rss('https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=ko&gl=KR&ceid=KR:ko', 40),
