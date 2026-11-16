@@ -28,7 +28,7 @@ for (const s of use.filter((s) => NOW - Date.parse(s.t) <= WIN)) {
   for (const [src, arr] of Object.entries(s.src)) {
     for (const it of arr || []) {
       if (!it.title || (src === 'gtrends' && !korean(it.title)) || src === 'wiki_ko_top') continue;
-      const kind = SUPPLY.includes(src) ? 'supply' : DEMAND.includes(src) ? 'demand' : src === 'mbcdy' ? 'base' : null;
+      const kind = DEMAND.includes(src) ? 'demand' : src === 'mbcdy' ? 'base' : 'supply'; // 새로 추가한 신호원은 기본적으로 공급(뉴스)로 본다
       if (!kind) continue;
       const at = (kind !== 'demand' ? t0(src === 'nocut' ? String(it.at).replace(' GMT', ' +0900') : it.at) : null) ?? Date.parse(s.t); // 노컷뉴스는 한국 시각을 GMT로 잘못 표기
       if (NOW - at > 48 * 3600e3) continue;

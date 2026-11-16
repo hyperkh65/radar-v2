@@ -13,7 +13,9 @@ const tag = (b, t) => un(b.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`))?.
 const items = (xml) => xml.match(/<item>[\s\S]*?<\/item>/g) || [];
 
 const rss = (url, n = 40) => async () =>
-  items(await get(url)).slice(0, n).map((b) => ({ title: tag(b, 'title'), link: tag(b, 'link'), at: tag(b, 'pubDate') || tag(b, 'dc:date') }));
+  items(await get(url)).slice(0, n).map((b) => ({ title: tag(b, 'title'), at: tag(b, 'pubDate') || tag(b, 'dc:date') }));
+// 구글 뉴스 검색 RSS — when:6h 로 최근 기사만, site: 로 매체 지정(제목 끝에 " - 매체명"이 붙는다)
+const gs = (q, n = 100) => rss(`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=ko&gl=KR&ceid=KR:ko`, n);
 
 const SOURCES = {
   // 공급: 무슨 일이 터졌나
@@ -28,6 +30,20 @@ const SOURCES = {
   sbs: rss('https://news.sbs.co.kr/news/newsflashRssFeed.do?plink=RSSREADER', 50),
   mk: rss('https://www.mk.co.kr/rss/30000001/', 50),
   hankyung: rss('https://www.hankyung.com/feed/all-news', 50),
+  donga_ent: rss('https://rss.donga.com/entertainment.xml', 50),
+  // 연예 전문 매체(자체 RSS가 막혀 있어 구글 뉴스 검색으로 읽음)
+  ent_mydaily: gs('site:mydaily.co.kr when:6h'),
+  ent_sportsseoul: gs('site:sportsseoul.com when:6h'),
+  ent_osen: gs('site:osen.mt.co.kr when:6h'),
+  ent_starnews: gs('site:starnewskorea.com when:6h'),
+  ent_tenasia: gs('site:tenasia.co.kr when:6h'),
+  ent_xports: gs('site:xportsnews.com when:6h'),
+  ent_newsen: gs('site:newsen.com when:6h'),
+  ent_dispatch: gs('site:dispatch.co.kr when:6h'),
+  ent_sportsdonga: gs('site:sports.donga.com when:6h'),
+  // 속보성 신호: "단독" 기사(여러 매체 동시)
+  gs_dokjeon: gs('단독 when:3h'),
+  gs_actor: gs('배우 when:3h'),
   gnews_top: rss('https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko', 40),
   gnews_nation: rss('https://news.google.com/rss/headlines/section/topic/NATION?hl=ko&gl=KR&ceid=KR:ko', 40),
   gnews_entertain: rss('https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=ko&gl=KR&ceid=KR:ko', 40),
